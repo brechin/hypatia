@@ -94,6 +94,8 @@ class Resource(object):
                 files[file_name] = file_data
 
         self.files = files
+        self.name = resource_name
+        self.category = resource_category
 
     def __getitem__(self, file_name):
 

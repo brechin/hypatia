@@ -274,6 +274,225 @@ class AnchorPoint(object):
                 self.y - other_anchor_point.y)
 
 
+class AnimatedSprite(pygame.sprite.Sprite):
+    """Animated sprite with mask, loaded from GIF.
+
+    Supposed to be mostly uniform with the Sprite API.
+
+    """
+
+    def __init__(self, path_or_readable):
+        # should use super?
+        pygame.sprite.Sprite.__init__(self)
+
+        # frames are (surface, duration)
+        self.frames = self.frames_from_pil_gif(pathor_readable)
+
+        # this gets updated depending on the frame/time
+        # needs to be a surface.
+        self.image = self.frames[0][0]  # first frame's surface
+        self.rect = self.image.get_rect()
+
+    def set_current_image(self):
+        """Set self.image to reflect the current frame.
+
+        """
+
+        self.image = self.frames[]
+
+    @staticmethod
+    def frames_from_gif(path_or_readable):
+        pil_gif = Image.open(path_or_readable)
+
+        frame_index = 0
+        frames = []
+
+        try:
+
+            while 1:
+                duration = pil_gif.info['duration'] / 1000.0
+                frame_sprite = pil_image_to_pygame_surface(pil_gif, "RGBA")
+                frames.append((frame_sprite, duration))
+                frame_index += 1
+                pil_gif.seek(pil_gif.tell() + 1)
+
+        except EOFError:
+
+            pass  # end of sequence
+
+        return frames
+
+    @staticmethod
+    def pil_image_to_pygame_surface(pil_image, encoding):
+        """Convert PIL Image() to pygame Surface.
+
+        Args:
+            pil_image (Image): image to convert to pygame.Surface().
+            encoding (str): image encoding, e.g., RGBA
+
+        Returns:
+            pygame.Surface: the converted image
+
+        Example:
+            >>> from PIL import Image
+            >>> path = 'resources/walkabouts/debug.zip'
+            >>> file_name = 'walk_north.gif'
+            >>> sample = zipfile.ZipFile(path).open(file_name).read()
+            >>> gif = Image.open(BytesIO(sample))
+            >>> pil_to_pygame(gif, "RGBA")
+            <Surface(6x8x32 SW)>
+
+        """
+
+        image_as_string = pil_image.convert('RGBA').tostring()
+
+        return pygame.image.fromstring(
+                                       image_as_string,
+                                       pil_image.size,
+                                       'RGBA'
+                                      )
+
+
+
+
+class Animation(object):
+    """Use sprites"""
+
+    def __init__(self, gif):
+        pil_gif = Image.open(path_or_bytesio)
+
+        frame_index = 0
+        frames = []
+
+        try:
+
+            while 1:
+                duration = pil_gif.info['duration'] / 1000.0
+                frame_sprite = pil_image_to_pygame_sprite(pil_gif, "RGBA")
+                frames.append((frame_sprite, duration))
+                frame_index += 1
+                pil_gif.seek(pil_gif.tell() + 1)
+
+        except EOFError:
+
+            pass  # end of sequence
+
+    # should this only exist in walkabout?
+    def apply_anchors(self):
+        pass
+
+    def get_current_frame(self):
+        pass
+
+    def draw(self, surface):
+        pass
+
+    @staticmethod
+    def pil_image_to_pygame_sprite(pil_image, encoding):
+        """Convert PIL Image() to pygame Surface.
+
+        Args:
+            pil_image (Image): image to convert to pygame.Surface().
+            encoding (str): image encoding, e.g., RGBA
+
+        Returns:
+            pygame.Surface: the converted image
+
+        Example:
+            >>> from PIL import Image
+            >>> path = 'resources/walkabouts/debug.zip'
+            >>> file_name = 'walk_north.gif'
+            >>> sample = zipfile.ZipFile(path).open(file_name).read()
+            >>> gif = Image.open(BytesIO(sample))
+            >>> pil_to_pygame(gif, "RGBA")
+            <Surface(6x8x32 SW)>
+
+        """
+
+        image_as_string = pil_image.convert('RGBA').tostring()
+
+        # needs to be sprite
+        return pygame.image.fromstring(
+                                       image_as_string,
+                                       pil_image.size,
+                                       'RGBA'
+                                      )
+
+
+class WalkaboutAnimation(object):
+    """A specific walkabout animation
+    is a GIF, anchors, and a mask.
+
+    Attributes:
+        animations: --
+        anchors: --
+        masks: The 1-bit masks based on the opaque
+            spaces of animations.
+        action: The action associated with
+            this WalkaboutAnimation.
+        direction: The direction associated with
+            this WalkaboutAnimation.
+
+    """
+
+    def __init__(self, resource, resource_name):
+        self.resource = resource
+        self.name = resource_name
+        self.action = constants.Action.stand
+        self.direction = constants.Direction.south
+
+        self.animation = self.resource[resource_name + '.gif']
+        self.anchors = {}
+        self.masks = None
+
+        self.create_direction_action()
+        self.create_anchors()
+        self.create_masks()
+
+    def create_direction_action(self):
+
+        # determine the associated action and direction
+        # from the resource_name
+        if self.name != 'only':
+            action, direction = self.name.split('_', 1)
+            self.action = getattr(constants.Action, action)
+            self.direction = getattr(constants.Direction, direction)
+
+    def create_anchors(self):
+        associated_ini_name = self.name + '.ini'
+
+        if associated_ini_name in self.resource:
+            anchors_ini = self.resource[associated_ini_name]
+            anim_anchors = AnimAnchors.from_config(anchors_ini)
+
+            try:
+                self.anchors[action][direction] = anim_anchors
+            except KeyError:
+                self.anchors[action] = {direction: anim_anchors}
+
+        else:
+            self.anchors = None
+
+    def create_masks(self):
+        """Create masks from self.animation.
+
+        Returns:
+            dict: Dictionary which mimics the structure of the
+                animations attribute, except masks are used
+                instead of PygAnimation objects.
+
+        """
+
+        for surface in self.animation.surfaces:
+
+        try:
+            self.mask = animation
+        except KeyError:
+            masks[action] = {direction: animation}
+
+        return masks
+
+
 class Walkabout(object):
     """Sprite animations for a character which walks around.
 
@@ -320,75 +539,26 @@ class Walkabout(object):
 
         # the attributes we're generating
         self.animations = {}
-        self.animation_anchors = {}
-        self.actions = []
-        self.directions = []
-        self.size = None  # will be removed in future?
+        self.anchors = {}
 
+        # create the position attribute "topleft_float"
         if not position:
             position = (0, 0)
 
-        topleft_float = (float(position[0]), float(position[1]))
+        self.topleft_float = (float(position[0]), float(position[1]))
 
         # specify the files to load
         # how will i glob a resource
-        resource = util.Resource('walkabouts', directory)
-        sprite_files = resource.get_type('.gif')
-
-        # no sprites matching pattern!
-        if not sprite_files:
-
-            raise BadWalkabout(directory)
-
-        for sprite_path in sprite_files.keys():
-            file_name, file_ext = os.path.splitext(sprite_path)
-            file_name = os.path.split(file_name)[1]
-
-            if file_name == 'only':
-                action = constants.Action.stand
-                direction = constants.Direction.south
-
-            else:
-                action, direction = file_name.split('_', 1)
-                direction = getattr(constants.Direction, direction)
-                action = getattr(constants.Action, action)
-
-            self.actions.append(action)
-            self.directions.append(direction)
-
-            # load pyganim from gif file
-            animation = sprite_files[sprite_path]
-
-            try:
-                self.animations[action][direction] = animation
-            except KeyError:
-                self.animations[action] = {direction: animation}
-
-            # load anchor points
-            # erro here not loading all the time
-            # maybe make the ini exlpicit? this caused porbs
-            associated_ini_name = file_name + '.ini'
-
-            if associated_ini_name in resource:
-                anchors_ini = resource[associated_ini_name]
-                anim_anchors = AnimAnchors.from_config(anchors_ini)
-
-                try:
-                    self.animation_anchors[action][direction] = anim_anchors
-                except KeyError:
-                    self.animation_anchors[action] = {direction: anim_anchors}
-
-            else:
-                self.animation_anchors = None
+        self.resource = util.Resource('walkabouts', directory)
+        self.create_animations_and_anchors()
 
         # ... set the rest of the attribs
-        self.resource = resource
         self.size = animation.getMaxSize()
         self.rect = pygame.Rect(position, self.size)
-        self.topleft_float = topleft_float
         self.action = constants.Action.stand
         self.direction = constants.Direction.south
-        self.child_walkabouts = children or []
+        self.children = children or []
+        self.masks = self.create_masks()
 
     def __getitem__(self, key):
         """Fetch sprites associated with action (key).
@@ -408,6 +578,57 @@ class Walkabout(object):
         """
 
         return self.animations[key]
+
+    def update_animations(self):
+        """Update the animation and anchor attributes
+        based on self.resource.
+
+        """
+
+        sprite_files = self.resource.get_type('.gif')
+
+        # no sprites matching pattern!
+        if not sprite_files:
+
+            raise BadWalkabout(self.resource.name)
+
+        for sprite_path in sprite_files.keys():
+            file_name, file_ext = os.path.splitext(sprite_path)
+            file_name = os.path.split(file_name)[1]
+
+            if file_name == 'only':
+                action = constants.Action.stand
+                direction = constants.Direction.south
+
+            else:
+                action, direction = file_name.split('_', 1)
+                direction = getattr(constants.Direction, direction)
+                action = getattr(constants.Action, action)
+
+            # load pyganim from gif file
+            animation = sprite_files[sprite_path]
+
+            try:
+                self.animations[action][direction] = animation
+            except KeyError:
+                self.animations[action] = {direction: animation}
+
+            # load anchor points
+            # erro here not loading all the time
+            # maybe make the ini exlpicit? this caused porbs
+            associated_ini_name = file_name + '.ini'
+
+            if associated_ini_name in self.resource:
+                anchors_ini = self.resource[associated_ini_name]
+                anim_anchors = AnimAnchors.from_config(anchors_ini)
+
+                try:
+                    self.animation_anchors[action][direction] = anim_anchors
+                except KeyError:
+                    self.animation_anchors[action] = {direction: anim_anchors}
+
+            else:
+                self.animation_anchors = None
 
     def current_animation(self):
         """Returns the animation selected by the current action

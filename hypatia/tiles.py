@@ -137,9 +137,13 @@ class TileMap(object):
                         animated_tile_stack[z].add(animation_info)
 
                     # finally passability!
-                    if 'impass_all' in tile.flags:
+                    if 'impass_rect' in tile.flags:
                         impassable_rects.append(pygame.Rect(tile_position,
                                                             tile_size))
+
+                    elif 'impass_mask' in tile.flags:
+                        mask = pygame.mask.from_surface(tile.subsurface)
+                        impassable_rects.append(mask)
 
             layer_images.append(new_layer)
 
