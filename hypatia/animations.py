@@ -331,6 +331,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
     def update(self):
         """Manage all the fancy time stuff.
 
+        This docstring is temporary until things are working.
+
         Based on this code:
 
             public synchronized void update(long elapsedTime) {
