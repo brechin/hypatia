@@ -274,46 +274,155 @@ class AnchorPoint(object):
                 self.y - other_anchor_point.y)
 
 
+class AnimatedSpriteFrame(object):
+    """A frame of an AnimatedSprite animation.
+
+    See Also:
+        :method:`AnimatedSprite.frames_from_gif()`
+
+    """
+
+
+    def __init__(self, surface, start_time, duration):
+        """
+
+        Args:
+            surface (pygame.Surface): The surface/image for this
+                frame.
+            duration (integer): Milleseconds this frame lasts.
+
+        """
+
+        self.surface = surface
+        self.duration = duration
+        self.start_time = start_time
+        self.end_time = start_time + duration
+
+
+# BEST/CURRENT
+# this will be used instead of pyganim
 class AnimatedSprite(pygame.sprite.Sprite):
     """Animated sprite with mask, loaded from GIF.
 
     Supposed to be mostly uniform with the Sprite API.
 
+    Attributes:
+        start_times
+        surfaces
+        durations
+        image
+        rect
+
+    See Also:
+        :class:`pygame.sprite.Sprite`
+
     """
 
     def __init__(self, path_or_readable):
-        # should use super?
-        pygame.sprite.Sprite.__init__(self)
-
-        # frames are (surface, duration)
-        self.frames = self.frames_from_pil_gif(pathor_readable)
+        pygame.sprite.Sprite.__init__(self)  # should use super()?
+        self.frames = self.frames_from_pil_gif(path_or_readable)
+        self.total_duration = self.total_duration(self.durations)
 
         # this gets updated depending on the frame/time
         # needs to be a surface.
-        self.image = self.frames[0][0]  # first frame's surface
+        self.image = self.surfaces[0]  # first frame
         self.rect = self.image.get_rect()
 
-    def set_current_image(self):
-        """Set self.image to reflect the current frame.
+    def update(self):
+        """Manage all the fancy time stuff.
+
+        Based on this code:
+
+            public synchronized void update(long elapsedTime) {
+                if (frames.size() > 1) {
+                    animTime += elapsedTime;
+                    if (animTime >= totalDuration) {
+                        animTime = animTime % totalDuration;
+                        currentFrame = 0;
+
+                    }
+
+                    while (animTime > getFrame(currentFrame).endTime) {
+                        currentFrame++;
+
+                    }
+                }
+            }
+
+        Source: http://www.kilobolt.com/day-8-animations/dear-readers
 
         """
 
-        self.image = self.frames[]
+        if len(self.surfaces) > 1:
+            # elapsed timedelta is the time since last update
+            # elapsed_timedelta = (current_time - last_time_recorded)
+            animation_time += elapsed_timedelta
+
+            if elapsed_time > self.total_duration:
+                animation_time = animation_time % total_duration
+                current_frame_index = 0
+
+            while animation_time > self.frames[current_frame_index].end_time:
+                current_frame += 1
+
+    @staticmethod
+    def get_total_duration(self, durations):
+        pass
+
+    # whoah useless?
+    def set_current_frame_to_image(self):
+        """Set self.image to reflect the current frame.
+
+        Find current frame by taking elapsed time and
+        using the modulus by start time? ...
+
+        >>> durations = [5, 55, 300]
+        >>> [0-5, 6-55, 56-300]
+        >>> elapsed = 5000
+        >>> elapsed_adjusted = float(elapsed) / float(durations[-1])
+
+        if elapsed > durations:
+
+            
+
+        """
+
+        elapsed_milliseconds_since_start = pygame.time.get_ticks()
+        self.image = self.surfaces[frame_index]
 
     @staticmethod
     def frames_from_gif(path_or_readable):
+        """Create a list of surfaces (frames) and a list of their
+        respective frame durations from an animated GIF.
+
+        Args:
+            path_or_readable (str|file-like-object): Path to
+                an animated-or-not GIF.
+
+        Returns
+            (List[pygame.Surface], List[int]): --
+
+        """
+
         pil_gif = Image.open(path_or_readable)
 
         frame_index = 0
         frames = []
+        time_position = 0
 
         try:
 
-            while 1:
+            while True:
                 duration = pil_gif.info['duration'] / 1000.0
                 frame_sprite = pil_image_to_pygame_surface(pil_gif, "RGBA")
-                frames.append((frame_sprite, duration))
+                frame = AnimatedSpriteFrame(
+                                            frame_sprite,
+                                            time_position,
+                                            duration
+                                           )
+                frames.append(frame)
                 frame_index += 1
+                time_posiiton += duration
                 pil_gif.seek(pil_gif.tell() + 1)
 
         except EOFError:
@@ -353,72 +462,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                       )
 
 
-
-
-class Animation(object):
-    """Use sprites"""
-
-    def __init__(self, gif):
-        pil_gif = Image.open(path_or_bytesio)
-
-        frame_index = 0
-        frames = []
-
-        try:
-
-            while 1:
-                duration = pil_gif.info['duration'] / 1000.0
-                frame_sprite = pil_image_to_pygame_sprite(pil_gif, "RGBA")
-                frames.append((frame_sprite, duration))
-                frame_index += 1
-                pil_gif.seek(pil_gif.tell() + 1)
-
-        except EOFError:
-
-            pass  # end of sequence
-
-    # should this only exist in walkabout?
-    def apply_anchors(self):
-        pass
-
-    def get_current_frame(self):
-        pass
-
-    def draw(self, surface):
-        pass
-
-    @staticmethod
-    def pil_image_to_pygame_sprite(pil_image, encoding):
-        """Convert PIL Image() to pygame Surface.
-
-        Args:
-            pil_image (Image): image to convert to pygame.Surface().
-            encoding (str): image encoding, e.g., RGBA
-
-        Returns:
-            pygame.Surface: the converted image
-
-        Example:
-            >>> from PIL import Image
-            >>> path = 'resources/walkabouts/debug.zip'
-            >>> file_name = 'walk_north.gif'
-            >>> sample = zipfile.ZipFile(path).open(file_name).read()
-            >>> gif = Image.open(BytesIO(sample))
-            >>> pil_to_pygame(gif, "RGBA")
-            <Surface(6x8x32 SW)>
-
-        """
-
-        image_as_string = pil_image.convert('RGBA').tostring()
-
-        # needs to be sprite
-        return pygame.image.fromstring(
-                                       image_as_string,
-                                       pil_image.size,
-                                       'RGBA'
-                                      )
-
-
+# not really at this point yet/kinda a replacement i started
+# working on for walkabout but i may just redo this again after i finish
+# AnimatedSprite
 class WalkaboutAnimation(object):
     """A specific walkabout animation
     is a GIF, anchors, and a mask.
@@ -448,15 +494,6 @@ class WalkaboutAnimation(object):
         self.create_direction_action()
         self.create_anchors()
         self.create_masks()
-
-    def create_direction_action(self):
-
-        # determine the associated action and direction
-        # from the resource_name
-        if self.name != 'only':
-            action, direction = self.name.split('_', 1)
-            self.action = getattr(constants.Action, action)
-            self.direction = getattr(constants.Direction, direction)
 
     def create_anchors(self):
         associated_ini_name = self.name + '.ini'
