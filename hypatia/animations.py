@@ -49,6 +49,7 @@ from PIL import Image
 
 from hypatia import util
 from hypatia import render
+from hypatia import physics
 from hypatia import constants
 
 
@@ -155,7 +156,7 @@ class LabeledSurfaceAnchors(object):
         self.labeled_anchors = {}
 
         for section in anchors_config.sections():
-            anchor_for_frame = anchors_config[section][frame_index]
+            anchor_for_frame = anchors_config.get(section, str(frame_index))
             x, y = anchor_for_frame.split(',')
             self.labeled_anchors[section] = Anchor(int(x), int(y))
 
@@ -211,14 +212,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
     """
 
-    def __init__(self, path_or_readable, anchor_config=None):
-        """The default is to create from gif bytes, but this can
-        also be done from other methods...
-
-        """
-
+    def __init__(self, frames):
         pygame.sprite.Sprite.__init__(self)  # should use super()?
-        self.frames = self.frames_from_gif(path_or_readable, anchor_config)
+        self.frames = frames
         self.total_duration = self.total_duration(self.frames)
         self.active_frame_index = 0
 
@@ -227,8 +223,40 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
         # this gets updated depending on the frame/time
         # needs to be a surface.
-        self.image = self.surfaces[0]  # first frame
+        self.image = self.frames[0].surface
         self.rect = self.image.get_rect()
+
+    def __getitem__(self, frame_index):
+
+        return self.frames[frame_index]
+
+    @staticmethod
+    def from_surface_duration_list(surface_duration_list):
+        """Support PygAnimation-style frames.
+
+        A list like [(surface, duration in ms)]
+
+        """
+
+        running_time = 0
+        frames = []
+
+        for surface, duration in surface_duration_list:
+            frame = AnimatedSpriteFrame(surface, running_time, duration)
+            frames.append(frame)
+
+        return AnimatedSprite(frames)
+
+    @classmethod
+    def from_file(cls, path_or_readable, anchors_config=None):
+        """The default is to create from gif bytes, but this can
+        also be done from other methods...
+
+        """
+
+        frames = cls.frames_from_gif(path_or_readable, anchors_config)
+
+        return AnimatedSprite(frames)
 
     def active_frame(self):
 
@@ -274,8 +302,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
         return sum([frame.duration for frame in frames])
 
-    @staticmethod
-    def frames_from_gif(path_or_readable, anchors_config=None):
+    @classmethod
+    def frames_from_gif(cls, path_or_readable, anchors_config=None):
         """Create a list of surfaces (frames) and a list of their
         respective frame durations from an animated GIF.
 
@@ -300,7 +328,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
             while True:
                 duration = pil_gif.info['duration'] / 1000.0
-                frame_sprite = pil_image_to_pygame_surface(pil_gif, "RGBA")
+                frame_sprite = cls.pil_image_to_pygame_surface(pil_gif, "RGBA")
                 frame_anchors = LabeledSurfaceAnchors(
                                                       anchors_config,
                                                       frame_index
@@ -313,7 +341,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                            )
                 frames.append(frame)
                 frame_index += 1
-                time_posiiton += duration
+                time_position += duration
                 pil_gif.seek(pil_gif.tell() + 1)
 
         except EOFError:
@@ -352,7 +380,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                        'RGBA'
                                       )
 
-class Walkabout(object):
+# redesign walkabout to be like AnimatedSprite, whereas image
+# attrib holds a surface which is updated in... update
+class Walkabout(pygame.sprite.Sprite):
     """The graphical representation of an actor. The animations
     associated with various actions and facing directions.
 
@@ -372,7 +402,11 @@ class Walkabout(object):
 
     """
 
-    def __init__(self, action_direction_animations, absolute_position=None):
+    # i'm thinking about moving velocity from actor to here.
+    # because position is best served here
+    def __init__(self, action_direction_animations,
+                absolute_position=None, children=None):
+
         """Construct a walkabout using the basic data constructs
         which comprise it. To automate the construction of said
         construct, refer to this class' ``from_`` class methods.
@@ -397,11 +431,21 @@ class Walkabout(object):
 
         """
 
+        self.children = children
         self.action_direction_animations = action_direction_animations
         self.absolute_position = absolute_position
 
         self.active_action = constants.Action.stand
-        self.active_direction = constants.Direction.down
+        self.active_direction = constants.Direction.south
+
+        # new wrong because image needs a surface not frame
+        self.image = (action_direction_animations[self.active_action]
+                      [self.active_direction][0].surface)
+        self.rect = self.image.get_rect()
+
+    def update(self):
+        self.image = self.active_animation().active_frame().surface
+        self.rect = self.image.get_rect()
 
     def active_animation(self):
         """Return the current AnimatedSprite based on the active
@@ -418,7 +462,7 @@ class Walkabout(object):
         return self.action_direction_animations[action][direction]
 
     @staticmethod
-    def from_resource(resource_name):
+    def from_resource(resource_name, position=None, children=None):
         resource = util.Resource('walkabouts', resource_name)
         sprite_files = resource.get_type('.gif')
 
@@ -429,6 +473,8 @@ class Walkabout(object):
 
         # We presume any GIFs in the resource are action_direction
         # sprite animations.
+        action_direction_animations = {}
+
         for sprite_path in sprite_files.keys():
             file_name, file_ext = os.path.splitext(sprite_path)
             file_name = os.path.split(file_name)[1]
@@ -447,22 +493,31 @@ class Walkabout(object):
 
             associated_config_name = file_name + '.ini'
 
-            if associated_ini_name in resource:
+            if associated_config_name in resource:
                 anchors_config = resource[associated_config_name]
             else:
                 anchors_config = None
 
-            animation = AnimatedSprite(
-                                       sprite_files[sprite_path],
-                                       anchors_config=anchors_config
-                                      )
+            animation = AnimatedSprite.from_file(
+                                                 sprite_files[sprite_path],
+                                                 anchors_config=anchors_config
+                                                )
 
             try:
-                animations[action][direction] = animation
+                action_direction_animations[action][direction] = animation
             except KeyError:
-                animations[action] = {direction: animation}
+                action_direction_animations[action] = {direction: animation}
 
-        return Walkabout(action_direction_animations)
+        if position:
+            position = physics.AbsolutePosition(*position)
+        else:
+            position = None
+
+        return Walkabout(
+                         action_direction_animations,
+                         absolute_position=position,
+                         children=children
+                        )
 
     # NOTE:should use sprite update and spritelayers... will
     # get back to that concept later.
@@ -484,7 +539,7 @@ class Walkabout(object):
         absolute_x = self.absolute_position.int_x
         absolute_y = self.absolute_position.int_y
         parent_position_anchor = Anchor(
-                                        absolute_x + frame_anchor.x
+                                        absolute_x + frame_anchor.x,
                                         absolute_y + frame_anchor.y
                                        )
 
@@ -495,6 +550,50 @@ class Walkabout(object):
             child.absolute_position.set_position(*new_child_position)
 
         return True
+
+    def get_actions_directions(self):
+
+        if len(self.action_direction_animations) == 1:
+            actions = (constants.Action.stand,)
+            directions = (constants.Direction.south,)
+
+        else:
+            actions = (constants.Action.walk, constants.Action.stand)
+            directions = (constants.Direction.north, constants.Direction.south,
+                          constants.Direction.east, constants.Direction.west)
+
+        return actions, directions
+
+    def convert(self):
+        actions, directions = self.get_actions_directions()
+
+        for action in actions:
+
+            for direction in directions:
+                animation = self.action_direction_animations[action][direction]
+
+                for frame in animation.frames:
+                    frame.surface = frame.surface.convert_alpha()
+
+    # this is bad
+    def runtime_setup(self):
+        """Perform actions to setup the walkabout. Actions performed
+        once pygame is running and walkabout has been initialized.
+
+        Convert and play all the animations, run init for children.
+
+        Note:
+            It MAY be bad to leave the sprites in play mode in startup
+            by default.
+
+        """
+
+        self.convert()
+
+        if self.children:
+
+            for walkabout_child in self.children:
+                walkabout_child.runtime_setup()
 
 
 class OldWalkabout(object):
@@ -509,7 +608,6 @@ class OldWalkabout(object):
     Blits its children relative to its own anchor.
 
     """
-
 
     def runtime_setup(self):
         """Perform actions to setup the walkabout. Actions performed
@@ -578,6 +676,7 @@ def palette_cycle(surface):
     old_color_list = collections.deque(ordered_color_list)
     new_surface = surface.copy()
     frames = []
+    time_position = 0
 
     for rotation_i in range(len(ordered_color_list)):
         new_surface = new_surface.copy()
@@ -594,8 +693,9 @@ def palette_cycle(surface):
             new_color = color_translations[color]
             new_surface.set_at(coordinate, new_color)
 
-        frame = new_surface.copy()
-        frames.append((frame, 0.2))
+        frame = AnimatedSpriteFrame(new_surface.copy(), time_position, 1000)
+        frames.append(frame)
         old_color_list = copy.copy(new_color_list)
+        time_position += 1000
 
-    return pyganim.PygAnimation(frames)
+    return AnimatedSprite(frames)

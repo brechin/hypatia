@@ -24,6 +24,7 @@ import pygame
 import pyganim
 
 from hypatia import util
+from hypatia import physics
 from hypatia import animations
 
 
@@ -133,7 +134,8 @@ class TileMap(object):
                     if tile.tilesheet_id in tilesheet.animated_tiles:
                         animated_tile = (tilesheet.
                                          animated_tiles[tile.tilesheet_id])
-                        animation_info = (animated_tile, tile_position)
+                        abs_position = physics.AbsolutePosition(*tile_position)
+                        animation_info = (animated_tile, abs_position)
                         animated_tile_stack[z].add(animation_info)
 
                     # finally passability!
@@ -141,7 +143,8 @@ class TileMap(object):
                         impassable_rects.append(pygame.Rect(tile_position,
                                                             tile_size))
 
-                    elif 'impass_mask' in tile.flags:
+                    # nope!
+                    elif 'asdf_impass_mask' in tile.flags:
                         mask = pygame.mask.from_surface(tile.subsurface)
                         impassable_rects.append(mask)
 
@@ -220,8 +223,8 @@ class TileMap(object):
         """
 
         for tile_pyganim, position in self.animated_tile_stack[layer]:
-            tile_pyganim.blit(viewport.surface,
-                              viewport.relative_position(position))
+            tile_pyganim.image.blit(viewport.surface,
+                                     position.viewport_relative(viewport))
 
     def runtime_setup(self):
         """This is for game.py. These need to be launched after pygame
@@ -235,10 +238,12 @@ class TileMap(object):
             image.convert()
             image.convert_alpha()
 
+        # old...
         for i, tile_pyganim in self.tilesheet.animated_tiles.items():
-            tile_pyganim.convert()
-            tile_pyganim.convert_alpha()
-            tile_pyganim.play()
+            #tile_pyganim.convert()
+            #tile_pyganim.convert_alpha()
+            #tile_pyganim.play()
+            pass
 
         return None
 
@@ -415,7 +420,8 @@ class Tilesheet(object):
                                      frame_duration))
 
                 if next_tile_id in seen_tile_ids:
-                    tile_pyganim = pyganim.PygAnimation(frame_buffer)
+                    tile_pyganim = (animations.AnimatedSprite
+                                    .from_surface_duration_list(frame_buffer))
                     animated_tiles[next_tile_id] = tile_pyganim
                     frame_buffer = []
                     seen_tile_ids = set()

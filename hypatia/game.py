@@ -163,16 +163,16 @@ class Game(object):
 
         # render each npc walkabout
         for npc in self.scene.npcs:
-            npc.walkabout.blit(
-                               self.viewport.surface,
-                               self.viewport.rect.topleft
-                              )
+            npc.walkabout.image.blit(
+                                     self.viewport.surface,
+                                     self.viewport.rect.topleft
+                                    )
 
         # finally human and rest map layers last
-        self.scene.human_player.walkabout.blit(
-                                               self.viewport.surface,
-                                               self.viewport.rect.topleft
-                                              )
+        self.scene.human_player.walkabout.image.blit(
+                                                     self.viewport.surface,
+                                                     self.viewport.rect.topleft
+                                                    )
 
         for i, layer in enumerate(self.scene.tilemap.layer_images[1:], 1):
             self.viewport.blit(layer)
@@ -236,10 +236,12 @@ class Scene(object):
         """
 
         # .. create player with player scene data
-        hat = animations.Walkabout('hat')
-        human_walkabout = animations.Walkabout('debug',
-                                               position=start_position,
-                                               children=[hat])
+        hat = animations.Walkabout.from_resource('hat')
+        human_walkabout = animations.Walkabout.from_resource(
+                                                             'debug',
+                                                             position=start_position,
+                                                             children=[hat]
+                                                            )
         velocity = physics.Velocity(20, 20)
         human_player = player.HumanPlayer(walkabout=human_walkabout,
                                           velocity=velocity)
@@ -386,7 +388,10 @@ class Scene(object):
         objects_to_setup = (self.tilemap, self.human_player.walkabout,)
         objects_to_setup = objects_to_setup + npcs_to_setup
 
-        for object_to_setup in objects_to_setup + npcs_to_setup:
+        # overriding for now...
+        #objects_to_setup = (self.tilemap,)
+
+        for object_to_setup in objects_to_setup:
             object_to_setup.runtime_setup()
 
 
@@ -508,7 +513,8 @@ class TMX(object):
                 position = (x, y)
                 walkabout_name = (properties.find(xpath % 'walkabout').
                                   attrib['value'])
-                walkabout = animations.Walkabout(walkabout_name, position)
+                walkabout = animations.Walkabout.from_resource(walkabout_name,
+                                                               position)
                 say_text = properties.find(xpath % 'say').attrib['value']
 
                 npc = player.Npc(walkabout=walkabout, say_text=say_text)

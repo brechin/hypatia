@@ -124,7 +124,9 @@ class Viewport(object):
 
         """
 
-        entity_position_x, entity_position_y = entity.rect.center
+        # use something else than just .rect.center, maybe use
+        # current_frame().rect.center!
+        entity_position_x, entity_position_y = entity.active_animation().rect.center
         difference_x = entity_position_x - self.rect.centerx
         difference_y = entity_position_y - self.rect.centery
         potential_rect = self.rect.move(*(difference_x, difference_y))
@@ -164,8 +166,3 @@ class Viewport(object):
                           (0, 0),
                           self.rect
                          )
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

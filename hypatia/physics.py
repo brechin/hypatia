@@ -41,26 +41,20 @@ class AbsolutePosition(object):
     Attributes:
         float_x (float): --
         float_y (float): --
-        int_x (int): Value is determined by float_x.
-        int_y (int): Value is determined by float_y.
-        rect (pygame.Rect): topleft derived from float
 
     """
 
-    def __init__(self, float_x, float_y, size):
+    def __init__(self, float_x, float_y):
         """Extrapolate position info from supplied info.
 
         Arguments:
           float_x (float): how many pixels from the left of the scene.
           float_y (float): how many pixels from the top of the scene.
-          size (tuple): (x, y) pixel dimensions of object being
-            represented.
 
         """
 
         self.float_x = float_x
         self.float_y = float_y
-        self.rect = pygame.Rect((float_x, float_y), size)
 
     def set_position(self, float_x, float_y):
         """Update the position of this AbsolutePosition
