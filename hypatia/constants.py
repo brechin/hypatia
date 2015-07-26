@@ -218,3 +218,17 @@ class Action(enum.Enum):
 
     stand = 1
     walk = 2
+
+    @classmethod
+    def yield_all(cls):
+        """This will be better in the future. This works nicely
+        for now. Cycles through all Action enums.
+
+        Yields:
+            Action: cycles through all action enums.
+
+        """
+
+        for action in (cls.stand, cls.walk):
+
+            yield action

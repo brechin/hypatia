@@ -30,35 +30,66 @@ class Velocity(object):
         self.y = y
 
 
-# this really isn't used, yet
-class Position(object):
-    """The position of an object.
+class AbsolutePosition(object):
+    """The position of an object. This is the physical data
+    representative of an object. A sprite's position for
+    rendering is a separate concept.
 
-    Scaffolding.
+    Uses floats for frame and pixel
+    independent movement adjustments.
+
+    Attributes:
+        float_x (float): --
+        float_y (float): --
+        int_x (int): Value is determined by float_x.
+        int_y (int): Value is determined by float_y.
+        rect (pygame.Rect): topleft derived from float
 
     """
 
-    def __init__(self, x, y, size):
+    def __init__(self, float_x, float_y, size):
         """Extrapolate position info from supplied info.
 
-        Args:
-          x (int|float): how many pixels from the left of the scene.
-          y (int|float): how many pixels from the top of the scene.
+        Arguments:
+          float_x (float): how many pixels from the left of the scene.
+          float_y (float): how many pixels from the top of the scene.
           size (tuple): (x, y) pixel dimensions of object being
             represented.
 
         """
 
-        self.rect = pygame.Rect((x, y), size)
-        self.float = (float(x), float(y))
-        self.int = (x, y)
+        self.float_x = float_x
+        self.float_y = float_y
+        self.rect = pygame.Rect((float_x, float_y), size)
 
+    def set_position(self, float_x, float_y):
+        """Update the position of this AbsolutePosition
+        instance, affecting all of its attributes.
 
-class AbsolutePosition(Position):
-    """The absolute pixel coordinate in regard to the scene.
+        Arguments:
+            float_x (float): --
+            float_y (float): --
 
-    Scaffolding.
+        """
 
-    """
+        self.float_x = float_x
+        self.float_y = float_y
+        self.rect.topleft = (float_x, float_y)
 
-    pass
+    def viewport_relative(self, viewport):
+        """Return this absolute position's position relative
+        to the viewport/screen.
+
+        Arguments:
+            viewport (render.Viewport): --
+
+        Returns:
+            tuple: (x, y) tuple representing this object's position
+                relative to the screen.
+        """
+
+        offset_x, offset_y = viewport.rect.topleft
+        new_float_x = self.float_x - offset_x
+        new_float_y = self.float_y - offset_y
+
+        return (new_float_x, new_float_y)
