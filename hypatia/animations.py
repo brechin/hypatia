@@ -192,13 +192,18 @@ class AnimatedSpriteFrame(object):
         self.anchors = anchors or None
 
 
-# BEST/CURRENT
-# this will be used instead of pyganim
-# animated sprite needs to optionally load the associated anchors from file
 class AnimatedSprite(pygame.sprite.Sprite):
     """Animated sprite with mask, loaded from GIF.
 
     Supposed to be mostly uniform with the Sprite API.
+
+    Note:
+        This is replacing pyganim as a dependency. Currently,
+        does not seem to draw. I assume this is a timedelta
+        or blending problem. In elaboration, this could also
+        be related to the fact that sprites are rendered
+        one-at-a-time, but they SHOULD be rendered through
+        sprite groups.
 
     Attributes:
         start_times
