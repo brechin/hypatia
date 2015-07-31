@@ -56,23 +56,10 @@ class AbsolutePosition(object):
         self.float_x = float_x
         self.float_y = float_y
 
-    def set_position(self, float_x, float_y):
-        """Update the position of this AbsolutePosition
-        instance, affecting all of its attributes.
-
-        Arguments:
-            float_x (float): --
-            float_y (float): --
-
-        """
-
-        self.float_x = float_x
-        self.float_y = float_y
-        self.rect.topleft = (float_x, float_y)
-
-    def viewport_relative(self, viewport):
+    def relative(self, viewport):
         """Return this absolute position's position relative
-        to the viewport/screen.
+        to the viewport/screen, or anything else
+        with the "rect.topleft" attribute.
 
         Arguments:
             viewport (render.Viewport): --

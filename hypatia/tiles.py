@@ -72,13 +72,13 @@ class TileMap(object):
         metadata, including passability.
 
         Args:
-          tilesheet_name (str): directory name of the swatch to use
-          tile_ids (list): 3d list where list[layer][row][tile]
+            tilesheet_name (str): directory name of the swatch to use
+            tile_ids (list): 3d list where list[layer][row][tile]
 
         Examples:
-          Make a 2x2x1 tilemap:
-          >>> tiles = [[[0, 0], [0, 0]]]
-          >>> tilemap = TileMap('debug', tiles)
+            Make a 2x2x1 tilemap:
+            >>> tiles = [[[0, 0], [0, 0]]]
+            >>> tilemap = TileMap('debug', tiles)
 
         """
 
@@ -224,7 +224,7 @@ class TileMap(object):
 
         for tile_pyganim, position in self.animated_tile_stack[layer]:
             tile_pyganim.image.blit(viewport.surface,
-                                     position.viewport_relative(viewport))
+                                    position.relative(viewport))
 
     def runtime_setup(self):
         """This is for game.py. These need to be launched after pygame

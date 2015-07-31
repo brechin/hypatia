@@ -29,6 +29,8 @@ class HumanPlayer(actor.Actor):
 
         """
 
+        print((self.walkabout.absolute_position.float_x,
+               self.walkabout.absolute_position.float_y))
         self.walkabout.direction = direction
 
         # hack for incorporating new velocity system, will update later
@@ -43,7 +45,8 @@ class HumanPlayer(actor.Actor):
         # test a series of positions
         for pixels in range(iter_pixels, 0, -1):
             # create a rectangle at the new position
-            new_topleft_x, new_topleft_y = self.walkabout.topleft_float
+            new_topleft_x = self.walkabout.absolute_position.float_x
+            new_topleft_y = self.walkabout.absolute_position.float_y
 
             # what's going on here
             if pixels == 2:
@@ -59,17 +62,15 @@ class HumanPlayer(actor.Actor):
                 new_topleft_x -= pixels * adj_speed
 
             destination_rect = pygame.Rect((new_topleft_x, new_topleft_y),
-                                           self.walkabout.size)
+                                           self.walkabout.rect.size)
             collision_rect = self.walkabout.rect.union(destination_rect)
 
             if not game.scene.collide_check(collision_rect):
                 # we're done, we can move!
-                new_topleft = (new_topleft_x, new_topleft_y)
                 self.walkabout.action = constants.Action.walk
-                animation = self.walkabout.current_animation()
-                self.walkabout.size = animation.getMaxSize()
-                self.walkabout.rect = destination_rect
-                self.walkabout.topleft_float = new_topleft
+                new_topleft = (new_topleft_x, new_topleft_y)
+                self.walkabout.absolute_position.float_x = new_topleft_x
+                self.walkabout.absolute_position.float_y = new_topleft_y
 
                 return True
 

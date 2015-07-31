@@ -197,13 +197,17 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
     Supposed to be mostly uniform with the Sprite API.
 
-    Note:
+    Notes:
         This is replacing pyganim as a dependency. Currently,
         does not seem to draw. I assume this is a timedelta
         or blending problem. In elaboration, this could also
         be related to the fact that sprites are rendered
         one-at-a-time, but they SHOULD be rendered through
         sprite groups.
+
+        The rect attribute is useless; should not be used,
+        should currently be avoided. This is a problem
+        for animated tiles...
 
     Attributes:
         start_times
@@ -229,6 +233,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
         # this gets updated depending on the frame/time
         # needs to be a surface.
         self.image = self.frames[0].surface
+
+        # never used.
         self.rect = self.image.get_rect()
 
     def __getitem__(self, frame_index):
@@ -267,30 +273,24 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
         return self.frames[self.active_frame_index]
 
-    def update(self):
+    def update(self, clock, absolute_position, viewport):
+        self.animation_position += clock.tick()
 
-        if len(self.surfaces) > 1:
-            # elapsed timedelta is the time since last update
-            # elapsed_timedelta = (current_time - last_time_recorded)
-            # NOTE: THIS MAY BE THE CAUSE OF AN ANIMATION BUG BECAUSE
-            # I AM NOT SURE IF THE MATH FOR ELAPSED IS CORRECT ELAPSED
-            # TIME SINCE LAST UPDATE
-            elapsed = pygame.time.get_ticks() - self.animation_position
+        if self.animation_position >= self.total_duration:
+            self.animation_position = (self.animation_position %
+                                       self.total_duration)
+            self.active_frame_index = 0
 
-            self.animation_position += elapsed
+        while (self.animation_position >
+               self.frames[self.active_frame_index].end_time):
 
-            if elapsed_time > self.total_duration:
-                self.animation_position = (self.animation_position %
-                                           self.total_duration)
-                self.active_frame_index = 0
+            self.active_frame_index += 1
 
-            while (self.animation_position >
-                   self.frames[self.active_frame_index].end_time):
+        self.image = self.frames[self.active_frame_index - 1].surface
 
-                self.active_frame_index += 1
-
-        self.image = self.frames[self.active_frame_index].surface
-        self.rect = self.image.get_rect()
+        image_size = self.image.get_size()
+        relative_position = absolute_position.relative(viewport)
+        self.rect = pygame.rect.Rect(relative_position, image_size)
 
     @staticmethod
     def total_duration(frames):
@@ -332,17 +332,22 @@ class AnimatedSprite(pygame.sprite.Sprite):
         try:
 
             while True:
-                duration = pil_gif.info['duration'] / 1000.0
+                duration = pil_gif.info['duration']
                 frame_sprite = cls.pil_image_to_pygame_surface(pil_gif, "RGBA")
-                frame_anchors = LabeledSurfaceAnchors(
-                                                      anchors_config,
-                                                      frame_index
-                                                     )
+
+                if anchors_config:
+                    frame_anchors = LabeledSurfaceAnchors(
+                                                          anchors_config,
+                                                          frame_index
+                                                         )
+                else:
+                    frame_anchors = None
+
                 frame = AnimatedSpriteFrame(
-                                            frame_sprite,
-                                            time_position,
-                                            duration,
-                                            frame_anchors
+                                            surface=frame_sprite,
+                                            start_time=time_position,
+                                            duration=duration,
+                                            anchors=frame_anchors
                                            )
                 frames.append(frame)
                 frame_index += 1
@@ -385,6 +390,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                        'RGBA'
                                       )
 
+
 # redesign walkabout to be like AnimatedSprite, whereas image
 # attrib holds a surface which is updated in... update
 class Walkabout(pygame.sprite.Sprite):
@@ -410,7 +416,7 @@ class Walkabout(pygame.sprite.Sprite):
     # i'm thinking about moving velocity from actor to here.
     # because position is best served here
     def __init__(self, action_direction_animations,
-                absolute_position=None, children=None):
+                absolute_position, children=None):
 
         """Construct a walkabout using the basic data constructs
         which comprise it. To automate the construction of said
@@ -431,11 +437,12 @@ class Walkabout(pygame.sprite.Sprite):
                 The above will give you the data construct described,
                 however, you'll want to define the animations, since
                 the above example uses None in lieu of an animation.
-            absolute_position (Optional[physics.AbsolutePosition]): The
+            absolute_position (physics.AbsolutePosition): The
                 position of this Walkabout.
 
         """
 
+        pygame.sprite.Sprite.__init__(self)  # should use super()?
         self.children = children
         self.action_direction_animations = action_direction_animations
         self.absolute_position = absolute_position
@@ -443,14 +450,18 @@ class Walkabout(pygame.sprite.Sprite):
         self.active_action = constants.Action.stand
         self.active_direction = constants.Direction.south
 
-        # new wrong because image needs a surface not frame
-        self.image = (action_direction_animations[self.active_action]
-                      [self.active_direction][0].surface)
+        # This is the render position, relative to the render
+        # viewport. It will be set by update.
         self.rect = self.image.get_rect()
 
-    def update(self):
-        self.image = self.active_animation().active_frame().surface
-        self.rect = self.image.get_rect()
+    def update(self, clock, viewport):
+
+        self.active_animation().update(clock, self.absolute_position, viewport)
+
+    @property
+    def image(self):
+
+        return self.active_animation().image
 
     def active_animation(self):
         """Return the current AnimatedSprite based on the active

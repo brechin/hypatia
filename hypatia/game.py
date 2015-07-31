@@ -125,15 +125,6 @@ class TMXLayersNotCSV(Exception):
         self.data_encodign = data_encoding
 
 
-# not in use
-class Hypatia(object):
-
-    def __init__(self, **kwargs):
-
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-
 class Game(object):
     """Simulates the interaction between game components."""
 
@@ -161,18 +152,8 @@ class Game(object):
         self.viewport.blit(first_tilemap_layer)
         self.scene.tilemap.blit_layer_animated_tiles(self.viewport, 0)
 
-        # render each npc walkabout
-        for npc in self.scene.npcs:
-            npc.walkabout.image.blit(
-                                     self.viewport.surface,
-                                     self.viewport.rect.topleft
-                                    )
-
-        # finally human and rest map layers last
-        self.scene.human_player.walkabout.image.blit(
-                                                     self.viewport.surface,
-                                                     self.viewport.rect.topleft
-                                                    )
+        self.scene.actor_group.update(self.screen.clock, self.viewport)
+        self.scene.actor_group.draw(self.viewport.surface)
 
         for i, layer in enumerate(self.scene.tilemap.layer_images[1:], 1):
             self.viewport.blit(layer)
@@ -220,6 +201,9 @@ class Scene(object):
         self.player_start_position = player_start_position
         self.human_player = human_player
         self.npcs = npcs or []
+
+        sprites = [npc.walkabout for npc in npcs] + [human_player.walkabout]
+        self.actor_group = pygame.sprite.Group(*sprites)
 
     @staticmethod
     def create_human_player(start_position):
