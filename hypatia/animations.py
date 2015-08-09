@@ -450,11 +450,26 @@ class Walkabout(pygame.sprite.Sprite):
         self.active_action = constants.Action.stand
         self.active_direction = constants.Direction.south
 
-        # This is the render position, relative to the render
-        # viewport. It will be set by update.
-        self.rect = self.image.get_rect()
+    @property
+    def rect(self):
+        """Return the active animation's Pygame.Rect. This is
+        namely used for rendering to a relative positoin on screen.
+
+        Render position.
+
+        Returns:
+            pygame.Rect: The rectangle with a position relative
+                to the viewport.
+
+        """
+
+        return self.active_animation().rect
 
     def update(self, clock, viewport):
+        """Update only the AnimatedSprite which is being used, with
+        information from this Walkabout instance.
+
+        """
 
         self.active_animation().update(clock, self.absolute_position, viewport)
 
@@ -552,8 +567,7 @@ class Walkabout(pygame.sprite.Sprite):
         parent_labeled_anchors = parent_active_frame.anchors
         parent_anchor = parent_labeled_anchors['head_anchor']
 
-        absolute_x = self.absolute_position.int_x
-        absolute_y = self.absolute_position.int_y
+        absolute_x, absolute_y = self.absolute_position.x_y()
         parent_position_anchor = Anchor(
                                         absolute_x + frame_anchor.x,
                                         absolute_y + frame_anchor.y

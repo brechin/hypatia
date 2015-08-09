@@ -161,6 +161,9 @@ class Viewport(object):
 
         """
 
+        # this is a source of a bug, right?
+        # things which use this will be forcefully drawn
+        # to 0,0
         self.surface.blit(
                           surface,
                           (0, 0),

@@ -29,9 +29,7 @@ class HumanPlayer(actor.Actor):
 
         """
 
-        print((self.walkabout.absolute_position.float_x,
-               self.walkabout.absolute_position.float_y))
-        self.walkabout.direction = direction
+        self.walkabout.active_direction = direction
 
         # hack for incorporating new velocity system, will update later
         if direction in (constants.Direction.north, constants.Direction.south):
@@ -67,7 +65,8 @@ class HumanPlayer(actor.Actor):
 
             if not game.scene.collide_check(collision_rect):
                 # we're done, we can move!
-                self.walkabout.action = constants.Action.walk
+                self.walkabout.active_action = constants.Action.walk
+                print("should be walking x.X")
                 new_topleft = (new_topleft_x, new_topleft_y)
                 self.walkabout.absolute_position.float_x = new_topleft_x
                 self.walkabout.absolute_position.float_y = new_topleft_y
@@ -75,7 +74,7 @@ class HumanPlayer(actor.Actor):
                 return True
 
         # never found an applicable destination
-        self.walkabout.action = constants.Action.stand
+        self.walkabout.active_action = constants.Action.stand
 
         return False
 

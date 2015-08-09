@@ -153,7 +153,18 @@ class Game(object):
         self.scene.tilemap.blit_layer_animated_tiles(self.viewport, 0)
 
         self.scene.actor_group.update(self.screen.clock, self.viewport)
+
+        # correct way, but disbaled because bug is blitting to 0,0
         self.scene.actor_group.draw(self.viewport.surface)
+        # .. now we do the hacky way that's testing manually
+        # specifying the blit pos from the absolute pos
+        """
+        for actor in self.scene.actor_group.sprites():
+            # blit at correct pos
+            print("matters: " + str(actor.rect.topleft))
+            actor.image.blit(self.viewport.surface,
+                             actor.absolute_position.relative(self.viewport))
+        """
 
         for i, layer in enumerate(self.scene.tilemap.layer_images[1:], 1):
             self.viewport.blit(layer)
@@ -187,6 +198,7 @@ class Scene(object):
 
     def __init__(self, tilemap, player_start_position,
                  human_player, npcs=None):
+
         """
         Args:
             tilemap (tiles.TileMap): --
@@ -221,6 +233,7 @@ class Scene(object):
 
         # .. create player with player scene data
         hat = animations.Walkabout.from_resource('hat')
+        print("start position from tmx is " + str(start_position))
         human_walkabout = animations.Walkabout.from_resource(
                                                              'debug',
                                                              position=start_position,

@@ -56,6 +56,10 @@ class AbsolutePosition(object):
         self.float_x = float_x
         self.float_y = float_y
 
+    def x_y(self):
+
+        return (self.float_x, self.float_y)
+
     def relative(self, viewport):
         """Return this absolute position's position relative
         to the viewport/screen, or anything else
