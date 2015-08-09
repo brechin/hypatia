@@ -9,6 +9,9 @@
 # and the setup.py for Hypatia. The --user flag installs
 # the package to the user's site packages.
 #
+# This script also FORCES the reinstallation of all
+# dependencies, including Hypatia itself.
+#
 # Does not require root.
 
-pip install --user -r requirements/python2.txt .
+pip install --upgrade --force-reinstall --user -r requirements/python2.txt .
