@@ -127,6 +127,7 @@ class Viewport(object):
         # use something else than just .rect.center, maybe use
         # current_frame().rect.center!
         entity_position_x, entity_position_y = entity.rect.center
+        print(entity.rect.center)
         difference_x = entity_position_x - self.rect.centerx
         difference_y = entity_position_y - self.rect.centery
         potential_rect = self.rect.move(*(difference_x, difference_y))

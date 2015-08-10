@@ -285,6 +285,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
                self.frames[self.active_frame_index].end_time):
 
             self.active_frame_index += 1
+            print("new frame")
 
         self.image = self.frames[self.active_frame_index - 1].surface
 
@@ -391,8 +392,6 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                       )
 
 
-# redesign walkabout to be like AnimatedSprite, whereas image
-# attrib holds a surface which is updated in... update
 class Walkabout(pygame.sprite.Sprite):
     """The graphical representation of an actor. The animations
     associated with various actions and facing directions.
@@ -624,51 +623,6 @@ class Walkabout(pygame.sprite.Sprite):
 
             for walkabout_child in self.children:
                 walkabout_child.runtime_setup()
-
-
-class OldWalkabout(object):
-    """Sprite animations for a character which walks around.
-
-    Contextually-aware graphical representation.
-
-    The walkabout sprites specified to be therein
-    walkabout_directory, are files with an action__direction.gif
-    filename convention.
-
-    Blits its children relative to its own anchor.
-
-    """
-
-    def runtime_setup(self):
-        """Perform actions to setup the walkabout. Actions performed
-        once pygame is running and walkabout has been initialized.
-
-        Convert and play all the animations, run init for children.
-
-        Note:
-            It MAY be bad to leave the sprites in play mode in startup
-            by default.
-
-        """
-
-        if len(self.animations) == 1:
-            actions = (constants.Action.stand,)
-            directions = (constants.Direction.south,)
-
-        else:
-            actions = (constants.Action.walk, constants.Action.stand)
-            directions = (constants.Direction.north, constants.Direction.south,
-                          constants.Direction.east, constants.Direction.west)
-
-        for action in actions:
-
-            for direction in directions:
-                animated_sprite = self.animations[action][direction]
-                animated_sprite.convert_alpha()
-                animated_sprite.play()
-
-        for walkabout_child in self.child_walkabouts:
-            walkabout_child.runtime_setup()
 
 
 def palette_cycle(surface):

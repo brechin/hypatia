@@ -66,7 +66,6 @@ class HumanPlayer(actor.Actor):
             if not game.scene.collide_check(collision_rect):
                 # we're done, we can move!
                 self.walkabout.active_action = constants.Action.walk
-                print("should be walking x.X")
                 new_topleft = (new_topleft_x, new_topleft_y)
                 self.walkabout.absolute_position.float_x = new_topleft_x
                 self.walkabout.absolute_position.float_y = new_topleft_y
