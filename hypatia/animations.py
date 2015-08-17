@@ -285,7 +285,6 @@ class AnimatedSprite(pygame.sprite.Sprite):
                self.frames[self.active_frame_index].end_time):
 
             self.active_frame_index += 1
-            print("new frame")
 
         self.image = self.frames[self.active_frame_index - 1].surface
 

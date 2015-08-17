@@ -63,10 +63,10 @@ class HumanPlayer(actor.Actor):
                                            self.walkabout.rect.size)
             collision_rect = self.walkabout.rect.union(destination_rect)
 
+            # needs sprite group collide check?
             if not game.scene.collide_check(collision_rect):
                 # we're done, we can move!
                 self.walkabout.active_action = constants.Action.walk
-                new_topleft = (new_topleft_x, new_topleft_y)
                 self.walkabout.absolute_position.float_x = new_topleft_x
                 self.walkabout.absolute_position.float_y = new_topleft_y
 

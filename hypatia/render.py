@@ -106,6 +106,8 @@ class Viewport(object):
         self.surface = pygame.Surface(size)
         self.rect = pygame.Rect((0, 0), size)
 
+    # NOTE: may have a bug related to division in Python 2. No
+    # such bug in python 3.
     def center_on(self, entity, master_rect):
         """Center the viewport rectangle on an object.
 
@@ -126,8 +128,8 @@ class Viewport(object):
 
         # use something else than just .rect.center, maybe use
         # current_frame().rect.center!
-        entity_position_x, entity_position_y = entity.rect.center
-        print(entity.rect.center)
+	# soooooooooooooooooooooo wrong! use position!!!!!
+        entity_position_x, entity_position_y = entity.absolute_position.x_y()
         difference_x = entity_position_x - self.rect.centerx
         difference_y = entity_position_y - self.rect.centery
         potential_rect = self.rect.move(*(difference_x, difference_y))

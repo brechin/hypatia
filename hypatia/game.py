@@ -245,13 +245,6 @@ class Scene(object):
 
         return human_player
 
-    def to_tmx_resource(self, tmx_name):
-        """Scaffolding.
-
-        """
-
-        pass
-
     @classmethod
     def from_tmx_resource(cls, tmx_name):
         """Create a scene from a Tiled editor TMX file in
