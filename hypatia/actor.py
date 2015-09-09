@@ -30,7 +30,6 @@ etalia, a common example being statistics like hit-points.
 
 """
 
-from hypatia import animations
 from hypatia import constants
 from hypatia import physics
 
@@ -150,13 +149,8 @@ class Actor(object):
 
         """
 
-        facing = {
-                  constants.Direction.north: constants.Direction.south,
-                  constants.Direction.east: constants.Direction.west,
-                  constants.Direction.west: constants.Direction.east,
-                  constants.Direction.south: constants.Direction.north
-                 }[at_direction]
-        self.walkabout.direction = facing
+        self.walkabout.direction = (constants.Direction.
+                                    opposite(at_direction))
 
         if self.say_text:
             dialogbox.set_message(self.say_text)
@@ -189,15 +183,17 @@ class Actor(object):
         # get the current direction, check a bit in front with a rect
         # to talk to npc if collide
         facing = self.walkabout.direction
-
-        if facing is constants.Direction.north:
-            disposition = (0, -1)
-        elif facing is constants.Direction.east:
-            disposition = (1, 0)
-        elif facing is constants.Direction.south:
-            disposition = (0, 1)
-        elif facing is constants.Direction.west:
-            disposition = (-1, 0)
+        disposition = {
+                       # cardinal
+                       constants.Direction.north: (0, -1),
+                       constants.Direction.east: (1, 0),
+                       constants.Direction.south: (0, 1),
+                       # ordinal
+                       constants.north_east: (1, -1),
+                       constants.south_east: (1, 1),
+                       constants.south_west: (-1, 1),
+                       constants.north_west: (-1, -1)
+                      }[facing]
 
         talk_rect = self.walkabout.rect.copy()
         talk_rect.move_ip(disposition)

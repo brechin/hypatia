@@ -2,23 +2,16 @@
 # MIT license: http://opensource.org/licenses/MIT
 
 """Tools for animation. Animation sources are GIFs from disk, which
-have been made into a PygAnimation [1]_ object. Stateful animations
-which represent objects, e.g., :class:`Walkabout` represents an
-:class:`actor.Actor`.
+have been made into a :class:`SpriteAnimation` instance. Stateful
+animations which represent objects, e.g., :class:`Walkabout`
+represents an :class:`actor.Actor`.
 
 Examples of "tools":
 
   * functions for creating an animation from a single suface
   * loading animations from disk
-  * adding frame-dependent positional data
+  * adding frame-specific positional data
   * contextually-aware sprites
-
-References:
-    .. [1] PygAnim:
-       http://inventwithpython.com/pyganim/
-
-Warning:
-    Sometimes an "animation" can consist of one frame.
 
 Note:
     I wanna add support for loading character animations
@@ -34,7 +27,6 @@ See Also:
 
 import os
 import copy
-import glob
 import itertools
 import collections
 
@@ -48,31 +40,40 @@ import pyganim
 from PIL import Image
 
 from hypatia import util
-from hypatia import render
 from hypatia import physics
 from hypatia import constants
 
 
 class BadWalkabout(Exception):
-    """The supplied directory has no files which match ``*.gif.`` The
-    walkabout resource specified does not contain any GIFs.
+    """Walkabout path/lookup failure; erroneous path. Default resource
+    prefix is resources/walkabouts.
+    
+    This is primarily used in :class:`Walkabout`: a glob operation
+    on resources/walkabouts/*.gif returns 0 results.
+    
+    Attributes:
+        failed_name (str): The supplied archive was appended to the
+            resources' walkabout directory. This is sad value of
+            the inaccessible lookup.
 
     See Also:
         :meth:`Walkabout.__init__`
 
     """
 
-    def __init__(self, supplied_archive):
-        """
+    def __init__(self, failed_name):
+        """Supplied archive name which is not present in the
+        resources/walkabouts directory.
 
         Args:
-            supplied_archive (str): :class:`Walkabout` resource archive
+            failed_name (str): :class:`Walkabout` resource archive
                 which *should* have contained files of pattern
                 ``*.gif,`` but didn't.
 
         """
 
-        super(BadWalkabout, self).__init__(supplied_archive)
+        super(BadWalkabout, self).__init__(failed_name)
+        self.failed_name = failed_name
 
 
 class Anchor(object):
@@ -111,12 +112,12 @@ class Anchor(object):
             >>> anchor_a = Anchor(4, 1)
             >>> anchor_b = Anchor(2, 0)
             >>> anchor_a + anchor_b
-            (6, 1)
+            Anchor(6, 1)
 
         """
 
-        return (self.x + other_anchor.x,
-                self.y + other_anchor.y)
+        return Anchor(self.x + other_anchor.x,
+                      self.y + other_anchor.y)
 
     def __sub__(self, other_anchor):
         """Find the difference between this anchor and another.
@@ -134,12 +135,12 @@ class Anchor(object):
             >>> anchor_a = Anchor(4, 1)
             >>> anchor_b = Anchor(2, 0)
             >>> anchor_a - anchor_b
-            (2, 1)
+            Anchor(2, 1)
 
         """
 
-        return (self.x - other_anchor.x,
-                self.y - other_anchor.y)
+        return Anchor(self.x - other_anchor.x,
+                      self.y - other_anchor.y)
 
 
 class LabeledSurfaceAnchors(object):
@@ -151,22 +152,49 @@ class LabeledSurfaceAnchors(object):
         """The default is to simply load the anchors from
         the GIF's anchor config file.
 
+        Args:
+            anchors_config (resources?): --
+            frame_index (int): Which animation frame do the
+                anchors belong to?
+
+        Raises:
+            KeyError: INI has no anchor entry for frame_index.
+            ValueError: INI's corresponding anchor entry is
+                malformed.
+
         """
 
-        self.labeled_anchors = {}
+        self._labeled_anchors = {}
 
         for section in anchors_config.sections():
             anchor_for_frame = anchors_config.get(section, str(frame_index))
             x, y = anchor_for_frame.split(',')
-            self.labeled_anchors[section] = Anchor(int(x), int(y))
+            self._labeled_anchors[section] = Anchor(int(x), int(y))
 
     def __getitem__(self, label):
+        """Return the anchor corresponding to label.
+        
+        Raises:
+            KeyError: label does not correspond to anything.
 
-        return self.labeled_anchors[label]
+        """"
+
+        return self._labeled_anchors[label]
 
 
 class AnimatedSpriteFrame(object):
     """A frame of an AnimatedSprite animation.
+
+    Attributes:
+        surface (pygame.Surface): The pygame image which is used
+            for a frame of an animation.
+        duration (integer): Milliseconds this frame lasts. How
+            long this frame is displayed in corresponding animation.
+            The default is 0.
+        start_time (integer): The millesecond in which this frame
+            will be displayed. The default is 0.
+        anchors (LabeledSurfaceAnchors): Optional positional anchors
+            used when afixing other surfaces upon another.
 
     See Also:
         :method:`AnimatedSprite.frames_from_gif()`
@@ -174,7 +202,7 @@ class AnimatedSpriteFrame(object):
     """
 
 
-    def __init__(self, surface, start_time, duration, anchors=None):
+    def __init__(self, surface, start_time=0, duration=0, anchors=None):
         """
 
         Args:
@@ -210,19 +238,29 @@ class AnimatedSprite(pygame.sprite.Sprite):
         for animated tiles...
 
     Attributes:
-        start_times
-        surfaces
-        durations
-        image
-        rect
+        total_duration (int): The total duration of of this
+            animation in milliseconds.
+        image (pygame.Surface): Current surface belonging to
+            the active frame.
+        rect (pygame.Rect): Represents the AnimatedSprite's
+            position on screen. Not an absolute position;
+            relative position.
+        active_frame_index (int): Frame # which is being
+            rendered/to be rendered.
+        animation_position (int): Animation position in
+            milliseconds; milleseconds elapsed in this
+            animation. This is used for determining
+            which frame to select.
 
     See Also:
-        :class:`pygame.sprite.Sprite`
+
+        * :class:`pygame.sprite.Sprite`
+        * :class:`AnimatedSpriteFrame`
 
     """
 
     def __init__(self, frames):
-        pygame.sprite.Sprite.__init__(self)  # should use super()?
+        super(AnimatedSprite, self).__init__()
         self.frames = frames
         self.total_duration = self.total_duration(self.frames)
         self.active_frame_index = 0
@@ -234,7 +272,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
         # needs to be a surface.
         self.image = self.frames[0].surface
 
-        # never used.
+        # represents the animated sprite's position
+        # on screen.
         self.rect = self.image.get_rect()
 
     def __getitem__(self, frame_index):
@@ -286,6 +325,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
             self.active_frame_index += 1
 
+        # NOTE: the fact that I'm using -1 here seems kinda sloppy,
+        # because this is a hacky fix due to my own ignorance.
         self.image = self.frames[self.active_frame_index - 1].surface
 
         image_size = self.image.get_size()

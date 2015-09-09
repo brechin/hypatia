@@ -73,6 +73,46 @@ class Direction(enum.Enum):
     east_west = 10
 
     @classmethod
+    def opposite(cls, direction)
+        """Return the direction which is opposite of the
+        provided direction.
+        
+        Arguments:
+            direction (Direction): Direction enumeration to get the
+                opposite direction enumeration of.
+                
+        Returns:
+            Direction: Direction opposite of provided direction.
+        
+        Raises:
+            KeyError: If you supplied a totes bogus direction.
+        
+        Examples:
+            >>> Direction.opposite(Direction.north)
+            Direction.south
+            >>> Direction.opposite(Direction.north_west)
+
+        """
+        
+        opposites = {
+                     # cardinal
+                     cls.north: cls.south,
+                     cls.south: cls.north,
+                     cls.east: cls.west,
+                     cls.west: cls.east,
+                     # ordinal
+                     cls.north_east: cls.south_west,
+                     cls.north_west: cls.south_east,
+                     cls.south_west: cls.north_east,
+                     cls.north_east: cls.north_west,
+                     # just for fun
+                     cls.north_south: cls.east_west,
+                     cls.east_west: cls.north_south
+                    }
+
+        return opposites[direction]
+
+    @classmethod
     def cardinal(cls):
         """Return a tuple of the cardinal directions in the order:
         North, East, South, West.
