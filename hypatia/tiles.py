@@ -131,6 +131,10 @@ class TileMap(object):
                     new_layer.blit(tile.subsurface, tile_position)
 
                     # is this tile an animation?
+                    # if this tile is an animation, fetch the actual
+                    # animated tile associated and add it to
+                    # the animated tile stack, along with
+                    # the absolute position of this animated tile.
                     if tile.tilesheet_id in tilesheet.animated_tiles:
                         animated_tile = (tilesheet.
                                          animated_tiles[tile.tilesheet_id])
@@ -143,7 +147,9 @@ class TileMap(object):
                         impassable_rects.append(pygame.Rect(tile_position,
                                                             tile_size))
 
-                    # nope!
+                    # I do not want to begin handling this flag yet. I
+                    # plan to add impass_mask flag support in the
+                    # near future.
                     elif 'asdf_impass_mask' in tile.flags:
                         mask = pygame.mask.from_surface(tile.subsurface)
                         impassable_rects.append(mask)

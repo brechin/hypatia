@@ -233,7 +233,6 @@ class Scene(object):
 
         # .. create player with player scene data
         hat = animations.Walkabout.from_resource('hat')
-        print("start position from tmx is " + str(start_position))
         human_walkabout = animations.Walkabout.from_resource(
                                                              'debug',
                                                              position=start_position,

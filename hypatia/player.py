@@ -29,6 +29,9 @@ class HumanPlayer(actor.Actor):
 
         """
 
+        print(self.walkabout.active_direction)
+        print(self.walkabout.active_action)
+        print('---------------------------')
         self.walkabout.active_direction = direction
 
         # hack for incorporating new velocity system, will update later

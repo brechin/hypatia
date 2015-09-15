@@ -73,7 +73,7 @@ class Direction(enum.Enum):
     east_west = 10
 
     @classmethod
-    def opposite(cls, direction)
+    def opposite(cls, direction):
         """Return the direction which is opposite of the
         provided direction.
         

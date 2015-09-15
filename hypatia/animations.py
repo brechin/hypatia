@@ -177,7 +177,7 @@ class LabeledSurfaceAnchors(object):
         Raises:
             KeyError: label does not correspond to anything.
 
-        """"
+        """
 
         return self._labeled_anchors[label]
 
