@@ -46,7 +46,6 @@ class Anchor(object):
         self.y = y
 
     def __repr__(self):
-
         return "<Anchor at (%d, %d)>" % (self.x, self.y)
 
     def __add__(self, other_anchor):
@@ -384,7 +383,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
                 second element being how long said surface
                 is displayed for. For example:
 
-                >>> a_surface = pygame.Surface((10, 10)
+                >>> a_surface = pygame.Surface((10, 10))
                 >>> duration = 100  # 100 MS
                 >>> surface_duration_list = [(a_surface, duration)]
 
@@ -478,9 +477,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
                                        self.total_duration)
             self.active_frame_index = 0
 
-        while (self.animation_position >
-               self.frames[self.active_frame_index].end_time):
-
+        while self.animation_position > self.frames[self.active_frame_index].end_time:  # noqa
             self.active_frame_index += 1
 
         # NOTE: the fact that I'm using -1 here seems sloppy/hacky
@@ -547,11 +544,11 @@ class AnimatedSprite(pygame.sprite.Sprite):
                     frame_anchors = None
 
                 frame = Frame(
-                              surface=frame_sprite,
-                              start_time=time_position,
-                              duration=duration,
-                              anchors=frame_anchors
-                             )
+                    surface=frame_sprite,
+                    start_time=time_position,
+                    duration=duration,
+                    anchors=frame_anchors
+                )
                 frames.append(frame)
                 frame_index += 1
                 time_position += duration
@@ -590,10 +587,10 @@ class AnimatedSprite(pygame.sprite.Sprite):
         image_as_string = pil_image.convert('RGBA').tostring()
 
         return pygame.image.fromstring(
-                                       image_as_string,
-                                       pil_image.size,
-                                       'RGBA'
-                                      )
+            image_as_string,
+            pil_image.size,
+            'RGBA'
+        )
 
     def convert_alpha(self):
         """A runtime method for optimizing all of the
