@@ -166,7 +166,7 @@ class Direction(enum.Enum):
 
         """
 
-        return (cls.north, cls.east, cls.south, cls.west)
+        return cls.north, cls.east, cls.south, cls.west
 
     @classmethod
     def x_plus(cls):
@@ -282,7 +282,7 @@ class Direction(enum.Enum):
 
             return None
 
-    def __add__(cls, other_direction):
+    def __add__(self, other_direction):
         """Combine one cardinal direction with
         another to get an ordinal direction.
 
@@ -299,7 +299,7 @@ class Direction(enum.Enum):
 
         """
 
-        return Direction(cls.value + other_direction.value)
+        return Direction(self.value + other_direction.value)
 
 
 @enum.unique

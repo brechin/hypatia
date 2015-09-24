@@ -82,7 +82,7 @@ class DialogBox(object):
 
     def next(self):
         # NOTE: i forgot what these notes are...
-        # will stay off beause viewport rect never resets!
+        # will stay off because viewport rect never resets!
         # when run out set self.active to false!
         offset = (0, self.character_size[1] * self.lines_at_a_time)
         self.viewport_rect.move_ip(offset)

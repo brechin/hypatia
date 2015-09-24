@@ -12,7 +12,6 @@ from hypatia import actor
 
 
 class HumanPlayer(actor.Actor):
-
     def __init__(self, *args, **kwargs):
         actor.Actor.__init__(self, *args, **kwargs)
 
@@ -80,6 +79,5 @@ class HumanPlayer(actor.Actor):
 
 
 class Npc(actor.Actor):
-
     def __init__(self, *args, **kwargs):
         actor.Actor.__init__(self, *args, **kwargs)

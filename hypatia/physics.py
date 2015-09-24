@@ -11,8 +11,6 @@ See Also:
 
 import pygame
 
-from hypatia import constants
-
 
 class Velocity(object):
     """Eight-directional velocity."""

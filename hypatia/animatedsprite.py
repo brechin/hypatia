@@ -102,7 +102,7 @@ class Anchor(object):
 
         """
 
-        return (self.x, self.y)
+        return self.x, self.y
 
 
 class FrameAnchors(object):
@@ -367,7 +367,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
             frame_area = frame_x * frame_y
 
             if frame_area > largest_area:
-                largest_frame_size = (frame_size)
+                largest_frame_size = frame_size
 
         return largest_frame_size
 

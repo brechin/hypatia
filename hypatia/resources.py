@@ -234,7 +234,7 @@ def load_gif(files, file_name):
     # Resources.__init__()
     gif_bytesio = BytesIO(file_data)
 
-    # get the corersponding INI which configures our anchor points
+    # get the corresponding INI which configures our anchor points
     # for this gif, from the files
     gif_name_no_ext = os.path.splitext(file_name)[0]
 

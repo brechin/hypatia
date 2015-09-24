@@ -10,7 +10,7 @@ which represent objects, e.g., :class:`Walkabout` represents an
 
 Examples of "tools":
 
-  * functions for creating an animation from a single suface
+  * functions for creating an animation from a single surface
   * loading animations from disk
   * adding frame-specific positional data
   * contextually-aware sprites
@@ -41,7 +41,6 @@ except ImportError:
     import configparser
 
 import pygame
-from PIL import Image
 
 from hypatia import constants
 from hypatia import resources
@@ -146,9 +145,9 @@ class Walkabout(pygame.sprite.Sprite):
 
         # no sprites matching pattern!
         if not sprite_files:
-
             raise BadWalkabout(directory)
 
+        animation = None
         for sprite_path in sprite_files.keys():
             file_name, file_ext = os.path.splitext(sprite_path)
             file_name = os.path.split(file_name)[1]
@@ -327,7 +326,7 @@ class Walkabout(pygame.sprite.Sprite):
 
 
 def palette_cycle(surface):
-    """get_palette is not sufficient; it generates superflous colors.
+    """get_palette is not sufficient; it generates superfluous colors.
 
     Note:
       Need to see if I can convert 32bit alpha to 8 bit temporarily,
@@ -345,7 +344,6 @@ def palette_cycle(surface):
         color = tuple(color)
 
         if color in seen_colors:
-
             continue
 
         ordered_color_list.append(color)

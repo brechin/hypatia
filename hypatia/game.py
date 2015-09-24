@@ -350,6 +350,7 @@ class Scene(object):
         # the NPC's attributes.
         for npc_name in npcs_ini.sections():
 
+            walkabout_name = None
             if npcs_ini.has_option(npc_name, 'walkabout'):
                 # The NPC's walkabout resource name
                 walkabout_name = npcs_ini.get(npc_name, 'walkabout')
