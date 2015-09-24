@@ -251,9 +251,8 @@ class Actor(object):
                 # the good feature of having a reason for an
                 # NPC not being able to respond. This currently
                 # does nothing...
-                except NoResponse as no_response:
-
-                    if response_failure is NoResponse.no_say_text:
+                except NoResponse as response_failure:
+                    if response_failure.reason is NoResponseReason.no_say_text:
                         # The NPC we're seeking a response from lacks
                         # a value for say text.
                         pass
