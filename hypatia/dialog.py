@@ -12,14 +12,12 @@ speak.
 
 """
 
-
 import textwrap
 
 import pygame
 
 
 class DialogBox(object):
-
     def __init__(self, viewport_size, font=None):
         """Place for displaying text...
 
@@ -71,10 +69,10 @@ class DialogBox(object):
 
         for line in message_lines:
             text_surface = self.font.render(
-                                            line,
-                                            False,
-                                            (0, 0, 0)
-                                           )
+                line,
+                False,
+                (0, 0, 0)
+            )
             full_surface.blit(text_surface, (0, y_pos))
             y_pos += self.character_size[1]
 

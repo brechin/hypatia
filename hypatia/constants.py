@@ -89,17 +89,17 @@ class Direction(enum.Enum):
         """
 
         dispositions = {
-                        # Cardinal directions' dispositions
-                        Direction.north: (0, -margin),
-                        Direction.east: (margin, 0),
-                        Direction.south: (0, margin),
-                        Direction.west: (-margin, 0),
-                        # Ordinal directions' dispositions
-                        Direction.north_east: (margin, -margin),
-                        Direction.south_east: (margin, margin),
-                        Direction.south_west: (-margin, margin),
-                        Direction.north_west: (-margin, -margin),
-                       }
+            # Cardinal directions' dispositions
+            Direction.north: (0, -margin),
+            Direction.east: (margin, 0),
+            Direction.south: (0, margin),
+            Direction.west: (-margin, 0),
+            # Ordinal directions' dispositions
+            Direction.north_east: (margin, -margin),
+            Direction.south_east: (margin, margin),
+            Direction.south_west: (-margin, margin),
+            Direction.north_west: (-margin, -margin),
+        }
 
         return dispositions[direction]
 
@@ -129,30 +129,30 @@ class Direction(enum.Enum):
         """
 
         opposites = {
-                     # Cardinal opposite pairs (4):
-                     #   * North > South
-                     #   * South > North
-                     #   * East > West
-                     #   * West > East
-                     cls.north: cls.south,
-                     cls.south: cls.north,
-                     cls.east: cls.west,
-                     cls.west: cls.east,
+            # Cardinal opposite pairs (4):
+            #   * North > South
+            #   * South > North
+            #   * East > West
+            #   * West > East
+            cls.north: cls.south,
+            cls.south: cls.north,
+            cls.east: cls.west,
+            cls.west: cls.east,
 
-                     # Ordinal opposite pairs (4):
-                     #   * North East > South West
-                     #   * South West > North East
-                     #   * North West > South East
-                     #   * South East > North West
-                     cls.north_east: cls.south_west,
-                     cls.south_west: cls.north_east,
-                     cls.north_west: cls.south_east,
-                     cls.south_east: cls.north_west,
+            # Ordinal opposite pairs (4):
+            #   * North East > South West
+            #   * South West > North East
+            #   * North West > South East
+            #   * South East > North West
+            cls.north_east: cls.south_west,
+            cls.south_west: cls.north_east,
+            cls.north_west: cls.south_east,
+            cls.south_east: cls.north_west,
 
-                     # "Just for Fun" opposite pairs (2):
-                     cls.north_south: cls.east_west,
-                     cls.east_west: cls.north_south,
-                    }
+            # "Just for Fun" opposite pairs (2):
+            cls.north_south: cls.east_west,
+            cls.east_west: cls.north_south,
+        }
 
         return opposites[direction]
 

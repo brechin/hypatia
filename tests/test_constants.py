@@ -7,9 +7,6 @@
 
 import os
 
-import pygame
-import pytest
-
 from hypatia import physics
 from hypatia import constants
 
@@ -59,7 +56,7 @@ class TestDirection(object):
         assert direction.disposition(direction.north) == (0, -1)
 
         # north east disposition of 98 is (98, -98)
-        assert direction.disposition(direction.north_east, 98,) == (98, -98)
+        assert direction.disposition(direction.north_east, 98, ) == (98, -98)
 
         # east disposition of 9 is (9, 0):
         assert direction.disposition(direction.east, 9) == (9, 0)
@@ -136,12 +133,13 @@ class TestDirection(object):
         """
 
         # Cardinals: North, East, South, West
-        assert (
-                constants.Direction.north,
-                constants.Direction.east,
-                constants.Direction.south,
-                constants.Direction.west
-               ) == constants.Direction.cardinal()
+        directions = (
+            constants.Direction.north,
+            constants.Direction.east,
+            constants.Direction.south,
+            constants.Direction.west
+        )
+        assert directions == constants.Direction.cardinal()
 
     def test_direction_aliases(self):
         """Test that the various aliases for directions work, i.e.,

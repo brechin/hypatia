@@ -20,7 +20,6 @@ except ImportError:
     import configparser
     from io import StringIO
 
-import pygame
 from hypatia.animatedsprite import AnimatedSprite
 
 
@@ -65,20 +64,20 @@ class Resource(object):
         # Keep in mind that directories are chosen over
         # zip archives (if the names are the same).
         path = os.path.join(
-                            'resources',
-                            resource_category,
-                            resource_name
-                           )
+            'resources',
+            resource_category,
+            resource_name
+        )
 
         # Once files have been collected from the aforementioned
         # path, the files will be passed through their respective
         # file_handler, if available for the given file extension.
         file_handlers = {
-                         '.ini': load_ini,
-                         '.gif': load_gif,
-                         '.png': load_png,
-                         '.txt': load_txt,
-                        }
+            '.ini': load_ini,
+            '.gif': load_gif,
+            '.png': load_png,
+            '.txt': load_txt,
+        }
 
         # 1. Create a dictionary, where the key is the file name
         # (including extension) and the value is the result
@@ -106,7 +105,6 @@ class Resource(object):
                     # because namelist will also generate
                     # the directories
                     if not file_name:
-
                         continue
 
                     file_data = zip_file.open(file_name).read()

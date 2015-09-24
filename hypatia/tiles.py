@@ -14,11 +14,6 @@ See Also:
 """
 
 import os
-import sys
-import glob
-import zlib
-import string
-import itertools
 
 import pygame
 
@@ -122,7 +117,6 @@ class TileMap(object):
 
                     # -1 is air/nothing
                     if tile.tilesheet_id == -1:
-
                         continue
 
                     # blit tile subsurface onto respective layer
@@ -368,10 +362,10 @@ class Tilesheet(object):
         # path to the zip containing tilesheet.png and tilesheet.ini
         resource = resources.Resource('tilesheets', tilesheet_name)
         zip_path = os.path.join(
-                                'resources',
-                                'tilesheets',
-                                tilesheet_name + '.zip'
-                               )
+            'resources',
+            'tilesheets',
+            tilesheet_name + '.zip'
+        )
         tilesheet_surface = pygame.image.load(resource['tilesheet.png'])
         config = resource['tilesheet.ini']
 

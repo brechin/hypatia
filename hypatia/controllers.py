@@ -85,7 +85,6 @@ class WorldController(GameController):
 
         # respond to states
         if self.game.dialogbox.active:
-
             # As long as a dialog box is active the player
             # cannot hit escape? This seems like bad code.
             return True
@@ -94,7 +93,6 @@ class WorldController(GameController):
         pressed_keys = pygame.key.get_pressed()
 
         if pressed_keys[K_ESCAPE]:
-
             # the escape key is pressed; we're
             # done; quitting time.
             return False
@@ -104,11 +102,11 @@ class WorldController(GameController):
         # so when the player is pressing that key,
         # they will be moving in that direction.
         movement = {
-                    K_UP: constants.Direction.north,
-                    K_RIGHT: constants.Direction.east,
-                    K_DOWN: constants.Direction.south,
-                    K_LEFT: constants.Direction.west,
-                   }
+            K_UP: constants.Direction.north,
+            K_RIGHT: constants.Direction.east,
+            K_DOWN: constants.Direction.south,
+            K_LEFT: constants.Direction.west,
+        }
 
         for key, direction in movement.items():
 

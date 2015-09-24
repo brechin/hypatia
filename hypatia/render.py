@@ -11,15 +11,8 @@ See Also:
 
 """
 
-import sys
-import time
-import itertools
-
 import pygame
-import pyganim
 from pygame.locals import *
-
-from hypatia import constants
 
 
 class Screen(object):
@@ -58,9 +51,9 @@ class Screen(object):
         display_info = pygame.display.Info()
         self.screen_size = (display_info.current_w, display_info.current_h)
         self.screen = pygame.display.set_mode(
-                                              self.screen_size,
-                                              FULLSCREEN | DOUBLEBUF
-                                             )
+            self.screen_size,
+            FULLSCREEN | DOUBLEBUF
+        )
         self.filters = filters
 
     def update(self, surface):
@@ -168,12 +161,13 @@ class Viewport(object):
         """
 
         self.surface.blit(
-                          surface,
-                          (0, 0),
-                          self.rect
-                         )
+            surface,
+            (0, 0),
+            self.rect
+        )
 
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
