@@ -28,10 +28,24 @@ packages = {
     'pkg_add': {
         2: 'py27-pip py27-game',
     },
+    'brew': {
+        2: 'install homebrew/python/pygame'
+    }
 }
 
-
 special_cases = {
+    "osx": {
+        "test": (lambda b: b['os'] == 'darwin'),
+        "install_deps": False,
+        "commands_root": [
+            "sudo pip install hg+http://bitbucket.org/pygame/pygame"
+        ],
+        "commands": [
+            "brew install sdl sdl_image sdl_mixer sdl_ttf portmidi",
+            "brew-cask install xquartz"
+        ],
+        "install_pip": True
+    },
     "travis_ci": {
         "test": (lambda b: "TRAVIS" in os.environ.keys() and os.environ["TRAVIS"] == 'true'),
         "install_deps": False,
@@ -52,46 +66,44 @@ special_cases = {
         ],
     },
     "linuxmint_py3": {
-        "test": (lambda b: b["pyver"]["base"] == "3" and b["pman"] == "apt-get" and "LinuxMint" in b["os"]), 
-	"commands_root": [
+        "test": (lambda b: b["pyver"]["base"] == "3" and b["pman"] == "apt-get" and "LinuxMint" in b["os"]),
+        "commands_root": [
             "apt-get install python3-pip python3-dev libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsdl-gfx1.2-dev libsdl-net1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsmpeg-dev libsdl1.2-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev libsdl-sge-dev libsdl-sound1.2-dev libportmidi-dev libsmpeg-dev",
         ],
-	"commands": [
+        "commands": [
             "pip install hg+http://bitbucket.org/pygame/pygame",
-	],
+        ],
     },
 }
 
+
 def get_available_pythons():
     found = []
-    
-    for i in ['2.7', '3.3', '3.4']:
+
+    for python_version in ['2.7', '3.3', '3.4']:
         try:
-            subprocess.check_output(['which', 'python%s' % i], stderr=subprocess.STDOUT)
-            found.append(i)
-
+            subprocess.call(['which', 'python%s' % python_version], stderr=subprocess.STDOUT)
+            found.append(python_version)
         except:
-
             continue
 
     return found
 
-def guess_package_manager():
-    found = None
-    for i in packages.keys():
-        try:
-            out = subprocess.check_output(['which', i], stderr=subprocess.PIPE)
-            return i
 
+def guess_package_manager():
+    for package_manager in packages.keys():
+        try:
+            subprocess.call(['which', package_manager], stderr=subprocess.PIPE)
+            return package_manager
         except:
             # assume `which` returned an error code (meaning it wasn't found)
+            continue
 
-            continue    
 
 def sudo(command):
     sudo_command = 'sudo -- {}'
     try:
-        out = subprocess.check_output(['which', 'sudo'])
+        subprocess.call(['which', 'sudo'])
     except:
         sudo_command = "su -c '{}'"
 
@@ -103,108 +115,125 @@ def sudo(command):
 
     return subprocess.call(sudo_command.format(command), shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
+
 def install(ver=None):
     # get canonical path for repository
-    try: 
-        path = subprocess.check_output("git rev-parse --show-toplevel", shell=True, stderr=subprocess.STDOUT).strip().decode("utf-8")
-    except Exception as e:
+    try:
+        path = subprocess.check_output("git rev-parse --show-toplevel", shell=True,
+                                       stderr=subprocess.STDOUT).strip().decode("utf-8")
+    except:
         print("!! Unable to find Hypatia repository. Please make sure you cloned the repository using Git.")
         exit(1)
 
     # get python versions
-    vers = get_available_pythons()
+    python_versions = get_available_pythons()
 
-    pyver = None
-    if ver != None and ver in vers:
-        pyver = ver
-    
-    if pyver == None and len(vers) > 1:
+    def version_autocompleter(text, state):
+        starts = []
+        for python_version in python_versions:
+            if python_version.startswith(text):
+                starts.append(python_version)
+
+        return starts[state]
+
+    input_python_version = None
+
+    # Check for specified version
+    if ver is not None and ver in python_versions:
+        input_python_version = ver
+
+    # Have user choose version
+    if input_python_version is None and len(python_versions) > 1:
         print("-> More than one Python version was found.")
         print("-> Available versions are:")
-        for i in vers:
-            print("  -> python%s" % i)
-        print("-> Which version would you like to use?")
-        
-        def completer(text, state):
-            starts = []
-            for i in vers:
-                if i.startswith(text):
-                    starts.append(i)
+        for version in python_versions:
+            print("  -> python%s" % version)
 
-            return starts[state]
+        print("-> Which version would you like to use?")
 
         readline.parse_and_bind("tab: complete")
-        readline.set_completer(completer)
-        
-        pyver = None
+        readline.set_completer(version_autocompleter)
+
         while True:
             if 'raw_input' in dir(__builtins__):
-                pyver = raw_input("=> ")
+                input_python_version = raw_input("=> ")
             else:
-                pyver = input("=> ")
+                input_python_version = input("=> ")
 
-            if pyver.startswith("python"):
-                pyver = pyver.split("python")[-1]
-            if pyver not in vers:
+            if input_python_version.startswith("python"):
+                input_python_version = input_python_version.split("python")[-1]
+            if input_python_version not in python_versions:
                 print("-> Not a valid version number.")
                 continue
 
             break
-    
-    pybasever = pyver.split('.')[0]
 
-    run_getpip = False  
+    python_base_version = input_python_version.split('.')[0]
+
+    run_getpip = False
     run_install = True
 
     # get package manager to use
-    pman = guess_package_manager()
-    if pman == None:
+    package_manager = guess_package_manager()
+    if package_manager is None:
         raise RuntimeError("No suitable package manager found.")
-    
+
     # check that the given package manager has packages for the selected python version
-    if not int(pybasever) in packages[pman].keys():
+    if not int(python_base_version) in packages[package_manager].keys():
         print("-> Your distribution does not support Hypatia with the selected Python version.")
         print("-> Please try again and select another Python version.")
         exit(1)
 
     # check special cases
-    os_info = None
     if os.path.isfile("/etc/lsb-release"):
         fh = open("/etc/lsb-release")
         os_info = fh.read()
         fh.close()
+    else:
+        os_info = sys.platform
 
-    build_info = {'pyver': {'base': pybasever, 'ver': pyver}, 'pman': pman, 'os': os_info}
-    for casename in special_cases.keys():
-        case = special_cases[casename]
-        if case['test'](build_info) == True:
+    build_info = {
+        'pyver': {
+            'base': python_base_version,
+            'ver': input_python_version
+        },
+        'pman': package_manager,
+        'os': os_info
+    }
+    for case_name in special_cases.keys():
+        case = special_cases[case_name]
+        assert 'test' in case
+        test_func = case['test']
+        assert callable(test_func)
+        if test_func(build_info):
             # run special case
-            print("-> Running special case '%s'" % casename)
+            print("-> Running special case '%s'" % case_name)
 
-            if "install_deps" in case.keys():            
+            if "install_deps" in case:
+                print('install_deps: %s' % case['install_deps'])
                 run_install = case["install_deps"]
-            if "install_pip" in case.keys():
+            if "install_pip" in case:
                 run_getpip = case["install_pip"]
-           
-            if "commands_root" in case.keys(): 
-                for i in case['commands_root']:
-                    assert 0 == sudo(i)
-       
-            if "commands" in case.keys():
-                for i in case['commands']:
-                    assert 0 == subprocess.call(i, shell=True, stdout=sys.stdout, stderr=sys.stderr)  
 
+            if "commands_root" in case.keys():
+                for version in case['commands_root']:
+                    assert 0 == sudo(version)
+
+            if "commands" in case.keys():
+                for version in case['commands']:
+                    assert 0 == subprocess.call(version, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
     if run_install:
         # attempt to install packages
         try:
-            print("-> Installing Hypatia dependencies using %s" % pman)
-            assert sudo("%s %s" % (pman, packages[pman][int(pybasever)])) == 0
-        except Exception as e:
-            raise RuntimeError("Error installing dependencies (using %s)" % pman)
+            print("-> Installing Hypatia dependencies using %s" % package_manager)
+            assert sudo("%s %s" % (package_manager, packages[package_manager][int(python_base_version)])) == 0
+        except Exception:
+            raise RuntimeError("Error installing dependencies (using %s)" % package_manager)
 
     if run_getpip:
-        if subprocess.call("python%s -m pip --version" % pyver, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0:
+        if subprocess.call("python%s -m pip --version" % input_python_version, shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE) == 0:
             print("-> Skipping Pip install as it's already present")
         else:
             print("-> Installing pip")
@@ -215,12 +244,17 @@ def install(ver=None):
     try:
         print("-> Installing Hypatia python dependencies")
 
-        py2install = "python%s -m pip install -r %s" % (pyver, os.path.join(path, "requirements", "python2.txt"))
-        py3install = "python%s -m pip install -r %s" % (pyver, os.path.join(path, "requirements", "base.txt"))
+        py2install = "python%s -m pip install -r %s" % (
+            input_python_version, os.path.join(path, "requirements", "python2.txt")
+        )
+        py3install = "python%s -m pip install -r %s" % (
+            input_python_version, os.path.join(path, "requirements", "base.txt")
+        )
 
-        assert subprocess.call(py2install if pybasever == "2" else py3install, shell=True, stdout=sys.stdout, stderr=sys.stderr) == 0
+        assert subprocess.call(py2install if python_base_version == "2" else py3install, shell=True, stdout=sys.stdout,
+                               stderr=sys.stderr) == 0
 
-    except Exception as e:
+    except Exception:
         print(e)
         raise RuntimeError("Error installing Python dependencies")
 
@@ -228,7 +262,8 @@ def install(ver=None):
     try:
         print("-> Installing Hypatia")
 
-        assert subprocess.call(['python%s' % pyver, '-m', 'pip', 'install', path], stdout=sys.stdout, stderr=sys.stderr) == 0
+        assert subprocess.call(['python%s' % input_python_version, '-m', 'pip', 'install', path], stdout=sys.stdout,
+                               stderr=sys.stderr) == 0
 
     except:
         raise RuntimeError("Error installing Hypatia via pip")
@@ -236,21 +271,21 @@ def install(ver=None):
     print("-> Done!")
     return True
 
+
 if __name__ == "__main__":
-    pyver = None
-    for i in sys.argv:
-        if i.startswith("--help") or i.startswith("-h"):
+    chosen_python_version = None
+    for arg in sys.argv:
+        if arg.startswith("--help") or arg.startswith("-h"):
             print("Usage: bootstrap [options]")
             print("Options:")
-            print("--help, -h    r         Display this help")
+            print("--help, -h              Display this help")
             print("--ver=python_ver        Use Python version python_ver to install Hypatia")
             exit(0)
-        if i.startswith('--ver='):
-            pyver = i.split("=")[-1]
-     
+        if arg.startswith('--ver='):
+            chosen_python_version = arg.split("=")[-1]
+
     try:
-        assert install(ver=pyver) == True
+        assert install(ver=chosen_python_version)
     except Exception as e:
         print("An error occurred:\n%s" % str(e))
         exit(1)
-
