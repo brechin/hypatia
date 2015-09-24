@@ -38,7 +38,6 @@ from hypatia import player
 from hypatia import sprites
 from hypatia import physics
 from hypatia import resources
-from hypatia import constants
 from hypatia import controllers
 
 
@@ -122,14 +121,12 @@ class TMXLayersNotCSV(Exception):
 
         message = 'tmx layer data encoding %s unsupported' % data_encoding
         super(TMXLayersNotCSV, self).__init__(message)
-        self.data_encodign = data_encoding
+        self.data_encoding = data_encoding
 
 
 # not in use
 class Hypatia(object):
-
     def __init__(self, **kwargs):
-
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -170,17 +167,17 @@ class Game(object):
         # render each npc walkabout
         for npc in self.scene.npcs:
             npc.walkabout.blit(
-                               self.screen.clock,
-                               self.viewport.surface,
-                               self.viewport.rect.topleft
-                              )
+                self.screen.clock,
+                self.viewport.surface,
+                self.viewport.rect.topleft
+            )
 
         # finally human and rest map layers last
         self.scene.human_player.walkabout.blit(
-                                               self.screen.clock,
-                                               self.viewport.surface,
-                                               self.viewport.rect.topleft
-                                              )
+            self.screen.clock,
+            self.viewport.surface,
+            self.viewport.rect.topleft
+        )
 
         for i, layer in enumerate(self.scene.tilemap.layer_images[1:], 1):
             self.viewport.blit(layer)
@@ -299,14 +296,14 @@ class Scene(object):
         human_player = cls.create_human_player(tmx.player_start_position)
 
         return Scene(
-                     tilemap=tmx.tilemap,
-                     player_start_position=tmx.player_start_position,
-                     human_player=human_player,
-                     npcs=tmx.npcs
-                    )
+            tilemap=tmx.tilemap,
+            player_start_position=tmx.player_start_position,
+            human_player=human_player,
+            npcs=tmx.npcs
+        )
 
     @classmethod
-    def from_resource(self, scene_name):
+    def from_resource(cls, scene_name):
         """The native format, and hopefully most reliable,
         stable, and generally best way of saving, loading,
         or creating Hypatia scenes.
@@ -338,7 +335,7 @@ class Scene(object):
 
         # Create a player using the player
         # start position found.
-        human_player = self.create_human_player(player_start_position)
+        human_player = cls.create_human_player(player_start_position)
 
         # npcs.ini
         #
@@ -381,11 +378,11 @@ class Scene(object):
             npcs.append(npc)
 
         return Scene(
-                     tilemap=tilemap,
-                     player_start_position=player_start_position,
-                     human_player=human_player,
-                     npcs=npcs
-                    )
+            tilemap=tilemap,
+            player_start_position=player_start_position,
+            human_player=human_player,
+            npcs=npcs
+        )
 
     def collide_check(self, rect):
         """Returns True if there are collisions with rect.
@@ -446,17 +443,17 @@ class Scene(object):
         # should use group draw
         for npc in self.npcs:
             npc.walkabout.blit(
-                               clock,
-                               viewport.surface,
-                               viewport.rect.topleft
-                              )
+                clock,
+                viewport.surface,
+                viewport.rect.topleft
+            )
 
         # finally human and rest map layers last
         self.human_player.walkabout.blit(
-                                         clock,
-                                         viewport.surface,
-                                         viewport.rect.topleft
-                                        )
+            clock,
+            viewport.surface,
+            viewport.rect.topleft
+        )
 
         for i, layer in enumerate(self.tilemap.layer_images[1:], 1):
             viewport.blit(layer)
@@ -521,14 +518,12 @@ class TMX(object):
         map_version = self.root.attrib['version']
 
         if map_version != self.SUPPORTED:
-
             raise TMXVersionUnsupported(map_version)
 
         # Get the Tilesheet (tileset) name from the tileset
         tileset_images = self.root.findall('.//tileset/image')
 
         if len(tileset_images) > 1:
-
             # too many tilesets!
             raise TMXTooManyTilesheets()
 
@@ -544,7 +539,6 @@ class TMX(object):
             data_encoding = layer_data.attrib['encoding']
 
             if data_encoding != 'csv':
-
                 raise TMXLayersNotCSV(data_encoding)
 
             layer_csv = layer_data.text.strip()
@@ -589,5 +583,4 @@ class TMX(object):
 
         # should use xpath before loading all npcs...
         if self.player_start_position is None:
-
             raise TMXMissingPlayerStartPosition()
