@@ -71,3 +71,4 @@ hypatia.wiki/
 *.swl
 .*.py.*
 pycallgraph.png
+.idea
