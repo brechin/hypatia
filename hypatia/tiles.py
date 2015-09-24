@@ -99,7 +99,7 @@ class TileMap(object):
         tiles = []
         layer_images = []
         impassable_rects = []
-        animated_tile_stack = {i: set() for i in range(depth_tiles)}
+        animated_tile_stack = dict([(i, set()) for i in range(depth_tiles)])
 
         for z, layer in enumerate(tile_ids):
             new_layer = pygame.Surface(layer_size, pygame.SRCALPHA, 32)
