@@ -361,11 +361,6 @@ class Tilesheet(object):
 
         # path to the zip containing tilesheet.png and tilesheet.ini
         resource = resources.Resource('tilesheets', tilesheet_name)
-        zip_path = os.path.join(
-            'resources',
-            'tilesheets',
-            tilesheet_name + '.zip'
-        )
         tilesheet_surface = pygame.image.load(resource['tilesheet.png'])
         config = resource['tilesheet.ini']
 
@@ -379,7 +374,7 @@ class Tilesheet(object):
         tilesheet_height_in_tiles = tilesheet_height // tile_height
         total_tiles = tilesheet_width_in_tiles * tilesheet_height_in_tiles
 
-        # tile initialization; buid all the tiles
+        # tile initialization; build all the tiles
         tiles = []
 
         for tilesheet_id in range(total_tiles):
@@ -506,8 +501,8 @@ def index_to_coord(width, i):
 
     if i == 0:
 
-        return (0, 0)
+        return 0, 0
 
     else:
 
-        return ((i % width), (i // width))
+        return (i % width), (i // width)
