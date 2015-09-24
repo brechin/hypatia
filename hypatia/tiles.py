@@ -14,11 +14,6 @@ See Also:
 """
 
 import os
-import sys
-import glob
-import zlib
-import string
-import itertools
 
 import pygame
 
